@@ -1,0 +1,24 @@
+#!/bin/bash
+#+
+# Usage:
+#
+#     run <scriptname>
+#
+# to run the script (assumed to be in the same directory as this script),
+# and play back the PNG sequences in frames/ on success.
+#
+# This script needs the ffplay command, which is part of FFmpeg
+# <https://www.ffmpeg.org/>.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+set -e
+parent_dir="${0/\/[^\/]*/\/}"
+mkdir -p frames
+find frames -maxdepth 1 -type f -name '????.png' | xargs -r rm
+$PYTHON "${parent_dir}/${1}"
+exec ffplay -autoexit frames/%04d.png
