@@ -1,0 +1,201 @@
+#!/usr/bin/python3
+#+
+# Example use of anim_framework: generate a more complex animation
+# with different curve types. The result may be viewed here
+# <https://vimeo.com/91132977>.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#
+# Written by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
+#-
+
+import sys
+import os
+import time
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Vector
+from fractions import \
+    Fraction
+from anim.common import \
+    linear_interpolator, \
+    ease_inout_interpolator, \
+    draw_overlay as overlay, \
+    draw_sequence as sequence, \
+    draw_compose as compose, \
+    make_draw as setup, \
+    transform_draw, \
+    render_anim
+from anim.troch import \
+    make_draw as troch
+from anim.lissa import \
+    make_draw as lissa
+from anim.rose import \
+    make_draw as rose
+
+drawing_size = Vector(1280, 720)
+anim_duration = 40.0
+frame_rate = 25
+nr_steps = 1000
+
+# bg_colour = Colour.from_hsva((0.144, 0.145, 1))
+bg_colour = Colour.from_hsva((0.17, 0.145, 1))
+corner_lissa = compose \
+  (
+    setup
+      (
+        ("set_source_colour", (Colour.from_hsva((0.25, 0.9, 0.9)),)),
+        ("set_line_width", (4,)),
+      ),
+    lissa
+      (
+        x_amp = 100,
+        x_freq = 2,
+        x_phase = linear_interpolator(0, anim_duration, 0, 1),
+        y_amp = 100,
+        y_freq = 3,
+        y_phase = 0,
+        nr_steps = nr_steps,
+      ),
+  )
+anim = overlay \
+    (
+        setup
+          (
+            ("set_source_colour", (bg_colour,)),
+            ("paint", ()),
+          ),
+        compose
+          (
+            setup
+              (
+                ("translate", ((-500, 200),)),
+              ),
+            corner_lissa,
+          ),
+        compose
+          (
+            setup
+              (
+                ("translate", ((-500, -200),)),
+              ),
+            corner_lissa,
+          ),
+        compose
+          (
+            setup
+              (
+                ("translate", ((500, -200),)),
+              ),
+            corner_lissa,
+          ),
+        compose
+          (
+            setup
+              (
+                ("translate", ((500, 200),)),
+              ),
+            corner_lissa,
+          ),
+        compose
+          (
+            setup
+              (
+                ("set_source_colour", (Colour.from_hsva((0.67, 0.9, 0.5)),)),
+                ("set_line_width", (12,)),
+              ),
+            lissa
+              (
+                x_amp = 550,
+                x_freq = linear_interpolator(0, anim_duration, 1.5, 9.5),
+                x_phase = linear_interpolator(0, anim_duration, 0, 2),
+                y_amp = 310,
+                y_freq = 6,
+                y_phase = 0,
+                nr_steps = nr_steps,
+              ),
+          ),
+        compose
+          (
+            setup
+              (
+                ("set_source_colour", (Colour.from_hsva((0.12, 0.9, 0.9)),)),
+                ("set_line_width", (13,)),
+              ),
+            sequence
+              (
+                x_vals = (1, anim_duration - 1),
+                draws =
+                    (
+                        rose
+                          (
+                            amplitude = 300,
+                            freq = Fraction(2, 5),
+                            offset = 0,
+                            phase = 0,
+                            nr_steps = nr_steps,
+                          ),
+                        transform_draw
+                          (
+                            draw = sequence
+                              (
+                                x_vals = (10,),
+                                draws =
+                                    (
+                                        rose
+                                          (
+                                            amplitude = ease_inout_interpolator(0, .5, 9.5, 10, 300, 0),
+                                            freq = Fraction(2, 5),
+                                            offset = ease_inout_interpolator(0, .5, 9.5, 10, 0, 300),
+                                            phase = ease_inout_interpolator(0, .5, 20, 20, 0, 0.5),
+                                            nr_steps = nr_steps,
+                                          ),
+                                        rose
+                                          (
+                                            amplitude = ease_inout_interpolator(10, 11.5, 19.5, 20, 0, 300),
+                                            freq = Fraction(2, 5),
+                                            offset = ease_inout_interpolator(10, 11.5, 19.5, 20, 300, 0),
+                                            phase = ease_inout_interpolator(0, 0, 19.5, 20, 0, 0.5),
+                                            nr_steps = nr_steps,
+                                          ),
+                                    )
+                              ),
+                            scale = (anim_duration - 2) / 20,
+                            offset = 1,
+                          ),
+                        rose
+                          (
+                            amplitude = 300,
+                            freq = Fraction(2, 5),
+                            offset = 0,
+                            phase = 0,
+                            nr_steps = nr_steps,
+                          ),
+                    )
+              ),
+          ),
+    )
+
+def anim_init(g) :
+    g.set_operator(CAIRO.OPERATOR_SOURCE)
+    g.translate(drawing_size / 2)
+#end anim_init
+
+start = time.time()
+frame_range = render_anim \
+  (
+    dimensions = drawing_size,
+    start_time = 0,
+    end_time = anim_duration,
+    frame_rate = frame_rate,
+    draw_frame = anim,
+    overall_presetup = anim_init,
+    out_dir = os.path.join(os.path.dirname(sys.argv[0]), "frames"),
+    start_frame_nr = 1
+  )
+sys.stdout.write("%d frames in %.3fs\n" % (frame_range[1], time.time() - start))
