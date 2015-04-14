@@ -17,8 +17,9 @@ from qahirah import \
     Colour, \
     Matrix, \
     Vector
-import anim_common
-from anim_troch import \
+from anim import \
+    common as anim_common
+from anim.troch import \
     make_draw as troch
 
 drawing_size = Vector(512, 512)
