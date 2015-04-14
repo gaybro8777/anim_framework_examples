@@ -1,0 +1,57 @@
+#!/usr/bin/python3
+#+
+# Example use of anim_framework: a simple Lissajous curve animation.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+from qahirah import \
+    Colour, \
+    Vector
+from anim import \
+    common, \
+    lissa
+
+anim_duration = 18.0
+dimensions = Vector(512, 512)
+frame_rate = 25.0
+nr_steps = 500
+
+lissa = lissa.make_draw \
+  (
+    x_amp = 200,
+    x_freq = 4,
+    x_phase = common.linear_interpolator(0, anim_duration, 0, 1),
+    y_amp = 200,
+    y_freq = 3,
+    y_phase = 0,
+    nr_steps = nr_steps,
+  )
+
+def anim_init(g) :
+    g.translate(dimensions / 2)
+    g.set_line_width(4)
+#end anim_init
+
+def init_frame(g, t) :
+    g.set_source_colour(Colour.grey(1)) # background colour
+    g.paint()
+    g.set_source_colour(Colour.from_hsva((0.25, 0.9, 0.9))) # curve colour
+#end init_frame
+
+common.render_anim \
+  (
+    dimensions = dimensions,
+    start_time = 0.0,
+    end_time = anim_duration,
+    frame_rate = frame_rate,
+    draw_frame = common.draw_compose(init_frame, lissa),
+    overall_presetup = anim_init,
+    out_dir = os.path.join(os.path.dirname(sys.argv[0]), "frames"),
+    start_frame_nr = 1
+  )

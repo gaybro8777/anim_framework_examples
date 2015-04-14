@@ -1,0 +1,77 @@
+#!/usr/bin/python3
+#+
+# Example use of anim_framework: animating the offset of a rose curve.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import time
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Vector
+from anim import \
+    common
+from anim.rose import \
+    make_draw as rose
+
+drawing_size = Vector(720, 720)
+curve_size = 120
+anim_duration = 5.0
+frame_rate = 25
+nr_steps = 1000
+
+bg_colour = Colour.from_hsva((0, .05, .9))
+fg_colour = Colour.from_hsva((.7, .7, .7))
+
+def anim_init(g) :
+    g.set_operator(CAIRO.OPERATOR_SOURCE)
+    g.translate(drawing_size / 2)
+    g.set_font_size(24)
+#end anim_init
+
+def show_params(g, t) :
+    offset = round(2 * curve_size * t / anim_duration)
+    g.move_to(curve_size * Vector(0.8, 1.5))
+    g.show_text("offset: %dpx" % offset)
+#end show_params
+
+curve = \
+    common.draw_compose \
+      (
+        common.make_draw
+          (
+            ("set_source_colour", (bg_colour,)),
+            ("paint", ()),
+            ("set_source_colour", (fg_colour,)),
+            ("set_line_width", (4,)),
+          ),
+        rose
+          (
+            amplitude = curve_size,
+            freq = 5,
+            offset = common.linear_interpolator(0, anim_duration, 0, 2 * curve_size),
+            phase = 0,
+            nr_steps = nr_steps
+          ),
+        show_params,
+      )
+
+start = time.time()
+frame_range = common.render_anim \
+  (
+    dimensions = drawing_size,
+    start_time = 0,
+    end_time = anim_duration,
+    frame_rate = frame_rate,
+    draw_frame = curve,
+    overall_presetup = anim_init,
+    out_dir = os.path.join(os.path.dirname(sys.argv[0]), "frames"),
+    start_frame_nr = 1
+  )
+sys.stdout.write("%d frames in %.3fs\n" % (frame_range[1], time.time() - start))
