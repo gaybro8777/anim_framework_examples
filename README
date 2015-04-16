@@ -10,5 +10,7 @@ the result, using ffplay. For example:
 to run the “readme_example” script and automatically play the generated animation
 afterwards.
 
+Note that the demos can take up to a minute or two to generate the frames.
+
 Lawrence D'Oliveiro <ldo@geek-central.gen.nz>
-2015 April 14
+2015 April 16
