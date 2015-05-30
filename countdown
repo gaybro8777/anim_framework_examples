@@ -1,0 +1,88 @@
+#!/usr/bin/python3
+#+
+# Example use of anim_framework: generating a film-leader countdown.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import math
+import time
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Vector
+from anim import \
+    common
+
+drawing_radius = 256
+text_size = 0.9
+anim_duration = 9.0
+frame_rate = 25
+bg_colour = Colour.grey(1, 1)
+fg_colour = Colour.grey(0, 1)
+
+drawing_dims = Vector(1, 1) * drawing_radius * 2
+
+def anim_init(g) :
+    global mid_y
+    g.set_operator(CAIRO.OPERATOR_SOURCE)
+    g.translate(drawing_dims / 2)
+    g.select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_NORMAL)
+    g.set_font_size(1)
+    extents = g.text_extents("W")
+    g.set_font_size(drawing_radius * 2 / min(extents.width, extents.height) * text_size)
+    extents = g.font_extents
+    mid_y = (extents.ascent - extents.descent) / 2
+#end anim_init
+
+def draw_number(g, n) :
+    (g
+        .set_source_colour(bg_colour)
+        .paint()
+        .set_source_colour(fg_colour)
+    )
+    s = "{:d}".format(n)
+    g.move_to((- g.text_extents(s).x_advance / 2, mid_y))
+    g.show_text(s)
+#end draw_number
+
+def draw_frame(g, t) :
+    t = anim_duration - t
+    frac = t - math.floor(t)
+    draw_number(g, math.floor(t))
+    if frac != 0 :
+        angle = (0.75 - frac) * qah.circle
+        g.save()
+        (g.new_path()
+            .move_to((0, 0))
+            .line_to(Vector.unit(angle) * drawing_radius)
+            .arc(centre = (0, 0), radius = drawing_radius, angle1 = angle, angle2 = qah.circle * 0.75, negative = False)
+            .close_path()
+            .set_line_width(10)
+            .stroke_preserve()
+            .clip()
+        )
+        draw_number(g, math.ceil(t))
+        g.restore()
+    #end if
+#end draw_frame
+
+start = time.time()
+frame_range = common.render_anim \
+  (
+    dimensions = drawing_dims,
+    start_time = 0,
+    end_time = anim_duration,
+    frame_rate = frame_rate,
+    draw_frame = draw_frame,
+    overall_presetup = anim_init,
+    out_dir = os.path.join(os.path.dirname(sys.argv[0]), "frames"),
+    start_frame_nr = 1
+  )
+sys.stdout.write("{} frames in {:.3f}s\n".format(frame_range[1], time.time() - start))
