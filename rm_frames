@@ -1,0 +1,14 @@
+#!/bin/bash
+#+
+# Usage:
+#
+#     ./rm_frames
+#
+# Gets rid of frames directory and nothing else.
+#
+# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+test -d frames && rm -rf frames
