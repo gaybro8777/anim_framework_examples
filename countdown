@@ -21,7 +21,7 @@ from anim import \
     common
 
 drawing_radius = 256
-text_size = 0.9
+rel_text_size = 0.9
 anim_duration = 9.0
 frame_rate = 25
 bg_colour = Colour.grey(1, 1)
@@ -37,12 +37,13 @@ def anim_init(g) :
     g.select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_NORMAL)
     g.set_font_size(1)
     extents = g.text_extents("W")
-    g.set_font_size(drawing_radius * 2 / min(extents.width, extents.height) * text_size)
+    g.set_font_size(drawing_radius * 2 / min(extents.width, extents.height) * rel_text_size)
     extents = g.font_extents
     mid_y = (extents.ascent - extents.descent) / 2
 #end anim_init
 
 def draw_number(g, n) :
+    "draws the display for specified integer number of seconds n."
     (g
         .set_source_colour(bg_colour)
         .paint()
@@ -58,7 +59,8 @@ def draw_frame(g, t) :
     frac = t - math.floor(t)
     draw_number(g, math.floor(t))
     if frac != 0 :
-        angle = (0.75 - frac) * qah.circle
+        # overlap appropriate fraction of display for prior whole number of seconds
+        angle = (0.75 - frac) * qah.circle # 0° = negative y-axis
         g.save()
         (g.new_path()
             .move_to((0, 0))
