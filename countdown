@@ -60,30 +60,29 @@ def draw_frame(g, t) :
     if frac != 0 :
         angle = (0.75 - frac) * qah.circle
         g.save()
-        clip = \
-            (g.new_path()
-                .move_to((0, 0))
-                .line_to(Vector.unit(angle) * drawing_radius)
-                .arc(centre = (0, 0), radius = drawing_radius, angle1 = angle, angle2 = qah.circle * 0.75, negative = False)
-                .close_path()
-                .copy_path()
-            )
-        g.clip()
+        (g.new_path()
+            .move_to((0, 0))
+            .line_to(Vector.unit(angle) * drawing_radius)
+            .arc(centre = (0, 0), radius = drawing_radius, angle1 = angle, angle2 = qah.circle * 0.75, negative = False)
+            .close_path()
+            .clip()
+        )
         draw_number(g, math.ceil(t))
         g.restore()
         (g
             .new_path()
-            .append_path(clip)
-            .set_line_width(line_width)
-            .stroke()
-        )
-    else :
-        (g.new_path()
-            .arc(centre = (0, 0), radius = drawing_radius, angle1 = 0, angle2 = qah.circle, negative = False)
+            .move_to(Vector.unit(angle) * drawing_radius)
+            .line_to((0, 0))
+            .line_to(Vector.unit(- 0.25 * qah.circle) * drawing_radius)
             .set_line_width(line_width)
             .stroke()
         )
     #end if
+    (g.new_path()
+        .arc(centre = (0, 0), radius = drawing_radius, angle1 = 0, angle2 = qah.circle, negative = False)
+        .set_line_width(line_width)
+        .stroke()
+    )
 #end draw_frame
 
 start = time.time()
