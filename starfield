@@ -25,7 +25,8 @@ anim_duration = 5.0
 frame_rate = 25
 nr_cycles = 1
 
-near_dist = 0.1
+near_dist = 0.01
+far_dist = 5
 stars = []
 nr_steps = 20 # small number for testing
 # TODO: random distribution
@@ -59,7 +60,7 @@ def draw_stars(g, t) :
         pos = star["pos"]
         dist = 1 + near_dist - (pos[2] + t / anim_duration * nr_cycles) % 1.0
         g.source_colour = star["colour"].replace_hsva(v = 1 - dist)
-        g.move_to(Vector((pos[0] - 0.5) / dist, (pos[1] - 0.5) / dist) * max(tuple(drawing_dims)))
+        g.move_to(Vector((pos[0] - 0.5) / dist / far_dist, (pos[1] - 0.5) / dist / far_dist) * max(tuple(drawing_dims)))
         g.rel_line_to((0, 0))
         g.stroke()
     #end for
