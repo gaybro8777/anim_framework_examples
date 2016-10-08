@@ -11,4 +11,4 @@
 # <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
 # what you will.
 #-
-test -d frames && rm -rf frames
+test -d frames && rm -rf frames || true
