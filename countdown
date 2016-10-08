@@ -2,7 +2,7 @@
 #+
 # Example use of anim_framework: generating a film-leader countdown.
 #
-# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# Copyright 2015, 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
 # <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
 # what you will.
@@ -24,7 +24,7 @@ drawing_radius = 256
 rel_text_size = 0.9
 anim_duration = 9.0
 frame_rate = 25
-bg_colour = Colour.grey(1, 1)
+bg_colour = Colour.grey(0.75, 1)
 fg_colour = Colour.grey(0, 1)
 line_width = 10
 
@@ -57,6 +57,7 @@ def draw_number(g, n) :
 def draw_frame(g, t) :
     t = anim_duration - t
     frac = t - math.floor(t)
+    arc_radius = 0.9 * drawing_radius
     draw_number(g, math.floor(t))
     if frac != 0 :
         # overlap appropriate fraction of display for prior whole number of seconds
@@ -65,7 +66,14 @@ def draw_frame(g, t) :
         (g.new_path()
             .move_to((0, 0))
             .line_to(Vector.unit(angle) * drawing_radius)
-            .arc(centre = (0, 0), radius = drawing_radius, angle1 = angle, angle2 = qah.circle * 0.75, negative = False)
+            .arc
+              (
+                centre = (0, 0),
+                radius = arc_radius,
+                angle1 = angle,
+                angle2 = qah.circle * 0.75,
+                negative = False
+              )
             .close_path()
             .clip()
         )
@@ -81,7 +89,14 @@ def draw_frame(g, t) :
         )
     #end if
     (g.new_path()
-        .arc(centre = (0, 0), radius = drawing_radius, angle1 = 0, angle2 = qah.circle, negative = False)
+        .arc
+          (
+            centre = (0, 0),
+            radius = arc_radius,
+            angle1 = 0,
+            angle2 = qah.circle,
+            negative = False
+          )
         .set_line_width(line_width)
         .stroke()
     )
