@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 #+
 # Example use of anim_framework: an animation based on Maurer roses.
+# The result may be viewed here <https://vimeo.com/186138858>.
 #
 # Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
