@@ -1,0 +1,154 @@
+#!/usr/bin/python3
+#+
+# Example use of anim_framework: an animation based on Maurer roses.
+#
+# Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import math
+import time
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Vector
+from anim.common import \
+    linear_interpolator, \
+    draw_compose as compose, \
+    draw_overlay as overlay, \
+    hsva_to_colour_interpolator, \
+    make_draw as setup, \
+    render_anim
+from anim.maurer import \
+    make_draw as maurer
+
+drawing_size = Vector(1280, 720)
+anim_duration = 30.0
+frame_rate = 25
+
+tilt = math.atan2(140, 430)
+#delta_lo, delta_hi = 9, 99 # very busy
+delta_lo, delta_hi = 31, 77 # easier on the eyes
+bg_pat = qah.Pattern.create_linear \
+  (
+    p0 = (-0, -450),
+    p1 = (0, +450),
+    colour_stops =
+        (
+            (0, Colour.grey(0.5)),
+            (0.2, Colour.grey(0.8)),
+            (0.5, Colour.grey(0.9)),
+            (0.8, Colour.grey(0.8)),
+            (1, Colour.grey(0.5)),
+        )
+  )
+choose_colour = lambda i : \
+    hsva_to_colour_interpolator \
+      (
+        h = linear_interpolator(0, anim_duration, 0 + (i - 1) / 3, 1 + (i - 1) / 3),
+        s = 0.9,
+        v = 0.6,
+        a = 1
+      )
+amplitude = 200
+delta = linear_interpolator(0, anim_duration, delta_lo, delta_hi)
+modulo = 360
+phase = linear_interpolator(0, anim_duration, 0, 0.5 * qah.circle)
+rotate = linear_interpolator(0, anim_duration, 0, - 4 * qah.circle)
+animation = compose \
+  (
+    setup
+      (
+        ("rotate", (linear_interpolator(0, anim_duration, tilt, - tilt),)),
+        ("set_source", (bg_pat,)),
+        ("paint", ()),
+        ("set_line_width", (3,)),
+      ),
+    overlay
+      (
+        compose
+          (
+            setup
+              (
+                ("translate", ((-452, 0),)),
+                ("rotate", (rotate,)),
+                ("set_source_colour", (choose_colour(1),))
+              ),
+            maurer
+              (
+                amplitude = amplitude,
+                delta = delta,
+                freq = 4,
+                mod = modulo,
+                offset = 0,
+                phase = phase
+              ),
+          ),
+      ),
+    overlay
+      (
+        compose
+          (
+            setup
+              (
+                ("translate", ((0, 0),)),
+                ("rotate", (rotate,)),
+                ("set_source_colour", (choose_colour(2),))
+              ),
+            maurer
+              (
+                amplitude = amplitude,
+                delta = delta,
+                freq = 5,
+                mod = modulo,
+                offset = 0,
+                phase = phase
+              ),
+          ),
+      ),
+    overlay
+      (
+        compose
+          (
+            setup
+              (
+                ("translate", ((+452, -0),)),
+                ("rotate", (rotate,)),
+                ("set_source_colour", (choose_colour(3),))
+              ),
+            maurer
+              (
+                amplitude = amplitude,
+                delta = delta,
+                freq = 7,
+                mod = modulo,
+                offset = 0,
+                phase = phase
+              ),
+          ),
+      ),
+  )
+
+def anim_init(g) :
+    g.set_operator(CAIRO.OPERATOR_SOURCE)
+    g.translate(drawing_size / 2)
+#end anim_init
+
+start = time.time()
+frame_range = render_anim \
+  (
+    dimensions = drawing_size,
+    start_time = 0,
+    end_time = anim_duration,
+    frame_rate = frame_rate,
+    draw_frame = animation,
+    overall_presetup = anim_init,
+    out_dir = os.path.join(os.path.dirname(sys.argv[0]), "frames"),
+    start_frame_nr = 1
+  )
+sys.stdout.write("%d frames in %.3fs\n" % (frame_range[1], time.time() - start))
