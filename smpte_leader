@@ -32,12 +32,12 @@ from anim.common import \
 
 drawing_dims = Vector(960, 720)
   # note: coords are set up so (0, 0) is centre of frame
-#anim_duration = 11.0
-anim_duration = 328 / 30 # match actual duration of above video
+anim_duration = 11.0
+#anim_duration = 328 / 30 # match actual duration of above video
 frame_rate = 24 # actually above video is 30fps
 nr_sweep_divisions = 24
-countdown_zero = anim_duration - 1 / nr_sweep_divisions
-  # so sweep matches reference video
+countdown_zero = anim_duration - 1.5 / nr_sweep_divisions
+  # so starting sweep matches reference video
 
 black = Colour.grey(0)
 white = Colour.grey(1)
@@ -472,6 +472,7 @@ anim = \
             items =
                 (
                     (2, compose(flip_vert, draw_splice_here)),
+                      # Hmm, I think this should only be one frame...
                     (2, draw_black),
                     (1, draw_subject),
                     (2, draw_length_roll),
@@ -480,7 +481,8 @@ anim = \
                     (1, draw_ratio_sound),
                     (1, draw_aspect_type_of),
                     (2, draw_head),
-                      # should be 1, and blotch should be 2, but then this disappears at 24fps
+                      # should be 1, and blotch should be 2,
+                      # but then this disappears at 24fps
                     (1, draw_blotch),
                     (1, draw_picture_label),
                     (2, draw_smpte),
@@ -501,8 +503,8 @@ anim = \
                     (179, draw_countdown),
                     (49, draw_black),
                     (1, draw_black), # actually there is a small circle here
-                    (9, draw_black),
-                    (1,
+                    (8, draw_black),
+                    (2,
                         compose
                           (
                             flip_horiz,
@@ -513,6 +515,8 @@ anim = \
                             draw_splice_here,
                           )
                     ),
+                      # should be 1, and previous draw_black should be 9,
+                      # but then this disappears at 24fps
                 ), # items
             before = None,
             after = None,
