@@ -471,8 +471,8 @@ anim = \
         (
             items =
                 (
-                    (2, compose(flip_vert, draw_splice_here)),
-                      # Hmm, I think this should only be one frame...
+                    (1, compose(flip_vert, draw_splice_here)),
+                      # was 2 originally, but I think this should only be one frame
                     (2, draw_black),
                     (1, draw_subject),
                     (2, draw_length_roll),
@@ -480,10 +480,8 @@ anim = \
                     (4, draw_black),
                     (1, draw_ratio_sound),
                     (1, draw_aspect_type_of),
-                    (2, draw_head),
-                      # should be 1, and blotch should be 2,
-                      # but then this disappears at 24fps
-                    (1, draw_blotch),
+                    (1, draw_head),
+                    (2, draw_blotch),
                     (1, draw_picture_label),
                     (2, draw_smpte),
                     (2, draw_xxxx),
