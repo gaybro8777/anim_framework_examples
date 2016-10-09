@@ -1,0 +1,495 @@
+#!/usr/bin/python3
+#+
+# Example use of anim_framework: generating something resembling
+# the famous SMPTE film-leader countdown
+# <https://archive.org/details/CincinnatusSMPTEFilmLeader_Test_>.
+#
+# Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+import sys
+import os
+import math
+import time
+import qahirah as qah
+from qahirah import \
+    CAIRO, \
+    Colour, \
+    Matrix, \
+    Path, \
+    Vector
+Pt = Path.Point
+from anim.common import \
+    draw_sequential as sequential, \
+    draw_compose as compose, \
+    make_draw as setup, \
+    render_anim
+
+drawing_dims = Vector(960, 720)
+  # note: coords are set up so (0, 0) is centre of frame
+#anim_duration = 11.0
+anim_duration = 328 / 30 # match actual duration of above video
+frame_rate = 24 # actually above video is 30fps
+nr_sweep_divisions = 24
+countdown_zero = anim_duration - 1 / nr_sweep_divisions
+  # so sweep matches reference video
+
+black = Colour.grey(0)
+white = Colour.grey(1)
+# approximate values from sampling one or two frames
+grey_1 = Colour.grey(104 / 255)
+grey_2 = Colour.grey(121 / 255)
+grey_3 = Colour.grey(183 / 255)
+small_font_size = 120
+
+def centre_text(g, text_size, y_pos, text) :
+    g.set_font_size(text_size)
+    text_width = g.text_extents(text).width
+    g.move_to((- text_width / 2, y_pos))
+    g.show_text(text)
+#end centre_text
+
+def right_align_text(g, text) :
+    g.rel_move_to((- g.text_extents(text).advance.x, 0))
+    g.show_text(text)
+#end right_align_text
+
+draw_black = setup \
+    (
+        ("set_source_colour", (black,)),
+        ("paint", ()),
+    )
+setup_grey = setup \
+    (
+        ("set_source_colour", (grey_2,)),
+        ("paint", ()),
+        ("set_source_colour", (white,)),
+    )
+setup_inverse = setup \
+    (
+        ("set_source_colour", (black,)),
+        ("paint", ()),
+        ("set_source_colour", (grey_3,)),
+    )
+setup_positive = setup \
+    (
+        ("set_source_colour", (white,)),
+        ("paint", ()),
+        ("set_source_colour", (black,)),
+    )
+flip_vert = setup \
+    (
+        ("scale", (Vector(1, -1),)),
+    )
+flip_horiz = setup \
+    (
+        ("scale", (Vector(-1, 1),)),
+    )
+rotate_cw = setup \
+    (
+        ("rotate", (90 * qah.deg,)),
+    )
+rotate_ccw = setup \
+    (
+        ("rotate", (-90 * qah.deg,)),
+    )
+
+def draw_splice_here(g, t) :
+    setup_inverse(g, t)
+    arrow_side = \
+        (
+            Vector(0.13, 0.18),
+            Vector(0.05, 0.14),
+            Vector(0.05, 1),
+        )
+    arrow = Path \
+      ((
+        Path.Segment
+          (
+            points =
+                    (Pt(Vector(0, 0), False),)
+                +
+                    tuple(Pt(v, False) for v in arrow_side)
+                +
+                    tuple(Pt(v * Vector(-1, 1), False) for v in reversed(arrow_side)),
+            closed = True
+          ),
+      ))
+    g.new_path()
+    g.append_path \
+      (
+        arrow.transform
+          (
+                Matrix.scale(700)
+            *
+                Matrix.translate((0, -0.5))
+          )
+      )
+    g.fill()
+    g.set_font_size(180)
+    g.move_to((-50, 0))
+    right_align_text(g, "SPL")
+    g.move_to((50, 0))
+    g.show_text("ICE")
+    g.move_to((-50, 200))
+    right_align_text(g, "HE")
+    g.move_to((50, 200))
+    g.show_text("RE")
+#end draw_splice_here
+
+def draw_subject(g, t) :
+    flip_vert(g, t)
+    setup_inverse(g, t)
+    centre_text(g, small_font_size, -250, "SUBJECT")
+#end draw_subject
+
+def draw_length_roll(g, t) :
+    flip_vert(g, t)
+    setup_inverse(g, t)
+    g.set_font_size(small_font_size)
+    g.move_to((-400, -250))
+    g.show_text("LENGTH")
+    g.move_to((-400, 25))
+    g.show_text("ROLL")
+#end draw_length_roll
+
+def draw_reel_color_picture(g, t) :
+    flip_vert(g, t)
+    setup_inverse(g, t)
+    g.set_font_size(small_font_size)
+    g.move_to((-400, -250))
+    g.show_text("REEL N")
+    pos1 = g.current_point
+    g.rel_move_to((0, g.text_extents("N").y_bearing - g.text_extents("o").y_bearing))
+    g.show_text("o")
+    pos2 = g.current_point
+    mid_pos = pos1 + Vector((pos2.x - pos1.x) / 2, -3)
+    line_len = 0.7 * (pos2.x - pos1.x)
+    g.new_path()
+    g.move_to(mid_pos - Vector(line_len / 2, 0))
+    g.rel_line_to((line_len, 0))
+    g.set_line_width(6)
+    g.stroke()
+    g.move_to((-400, 25))
+    g.show_text("COLOR")
+    g.move_to((-400, 325))
+    g.set_font_size(1.7 * small_font_size)
+    g.show_text("PICTURE")
+#end draw_reel_color_picture
+
+def draw_ratio_sound(g, t) :
+    flip_vert(g, t)
+    setup_inverse(g, t)
+    rotate_cw(g, t)
+    g.set_font_size(small_font_size)
+    g.move_to((-300, 100))
+    g.show_text("RATIO")
+    g.move_to((-300, 400))
+    g.show_text("SOUND")
+#end draw_ratio_sound
+
+def draw_aspect_type_of(g, t) :
+    flip_vert(g, t)
+    setup_inverse(g, t)
+    rotate_cw(g, t)
+    g.set_font_size(small_font_size)
+    g.move_to((-300, -350))
+    g.show_text("\u25ef" * 4)
+    g.move_to((-300, 50))
+    g.show_text("ASPECT")
+    g.move_to((-300, 400))
+    g.show_text("TYPE OF")
+#end draw_aspect_type_of
+
+def draw_head(g, t) :
+    setup_positive(g, t)
+    centre_text(g, 300, 0, "HEAD") # TODO: fill frame
+#end draw_head
+
+def draw_picture_label(g, t) :
+    setup_positive(g, t)
+    centre_text(g, 150, 0, "PICTURE") # TODO: fill frame
+#end draw_picture_label
+
+def draw_smpte(g, t) :
+    # actually the two frames are very slightly different.
+    setup_inverse(g, t)
+    centre_text(g, 1.5 * small_font_size, -150, "SMPTE")
+    centre_text(g, small_font_size, 0, "UNIVERSAL")
+    centre_text(g, 1.5 * small_font_size, 200, "LEADER")
+#end draw_smpte
+
+def draw_xxxx(g, t) :
+    setup_inverse(g, t)
+    g.set_font_size(small_font_size * 1.5)
+    g.move_to((-440, -170))
+    for i in range(4) :
+        pos = g.current_point
+        g.show_text("X")
+        g.move_to(pos + Vector(0, g.font_extents.height * 0.7))
+    #end for
+#end draw_xxxx
+
+def draw_reel_prod_play(g, t) :
+    flip_vert(g, t)
+    setup_inverse(g, t)
+    rotate_cw(g, t)
+    g.set_font_size(0.8 * small_font_size)
+    g.move_to((-300, -350))
+    g.show_text("REEL NO.")
+    g.move_to((-300, 50))
+    g.show_text("PROD NO.")
+    g.move_to((-300, 400))
+    g.show_text("PLAY DATE")
+#end draw_reel_prod_play
+
+def draw_pic_company_series(g, t) :
+    flip_vert(g, t)
+    setup_inverse(g, t)
+    rotate_cw(g, t)
+    g.set_font_size(0.8 * small_font_size)
+    g.move_to((-300, -350))
+    g.show_text("PICTURE")
+    g.move_to((-300, 50))
+    g.show_text("COMPANY")
+    g.move_to((-300, 400))
+    g.show_text("SERIES")
+#end draw_pic_company_series
+
+def draw_circles_common(g) :
+    g.set_line_width(6)
+    g.new_path()
+    g.set_source_colour(white)
+    g.arc \
+      (
+        centre = (0, 0),
+        radius = 300,
+        angle1 = 0,
+        angle2 = qah.circle,
+        negative = False
+      )
+    g.new_sub_path()
+    g.arc \
+      (
+        centre = (0, 0),
+        radius = 250,
+        angle1 = 0,
+        angle2 = qah.circle,
+        negative = False
+      )
+    g.stroke()
+#end draw_circles_common
+
+def draw_sound_start_common(g, size_text) :
+    draw_circles_common(g)
+    g.set_line_width(24)
+    g.new_path()
+    g.move_to((0, -500))
+    g.line_to((0, -300))
+    g.stroke()
+    centre_text(g, 1.5 * small_font_size, -50, size_text)
+    centre_text(g, 0.8 * small_font_size, 75, "SOUND")
+    centre_text(g, 0.8 * small_font_size, 190, "START")
+#end draw_sound_start_common
+
+def draw_sound_start_16(g, t) :
+    flip_vert(g, t)
+    setup_inverse(g, t)
+    rotate_ccw(g, t)
+    setup_grey(g, t)
+    draw_sound_start_common(g, "16")
+    g.new_path()
+    g.arc \
+      (
+        centre = (0, 390),
+        radius = 60,
+        angle1 = 0,
+        angle2 = qah.circle,
+        negative = False
+      )
+    g.stroke()
+    g.move_to((0, 300))
+    g.line_to((0, 330))
+    g.move_to((0, 450))
+    g.line_to((0, 500))
+    g.stroke()
+#end draw_sound_start_16
+
+def draw_sound_start_35(g, t) :
+    flip_vert(g, t)
+    setup_inverse(g, t)
+    rotate_cw(g, t)
+    setup_grey(g, t)
+    draw_sound_start_common(g, "35")
+    g.new_path()
+    g.move_to((0, 300))
+    g.line_to((0, 500))
+    g.stroke()
+    g.move_to((0, 460))
+    g.line_to((80, 340))
+    g.line_to((-80, 340))
+    g.fill()
+#end draw_sound_start_35
+
+def draw_picture_start(g, t) :
+    g.set_source_colour(grey_2)
+    g.paint()
+    g.set_source_colour(black)
+    centre_text(g, 1.6 * small_font_size, -100, "PICTURE")
+    centre_text(g, 2.2 * small_font_size, 200, "START")
+#end draw_picture_start
+
+countdown_overlays = \
+    { # (seconds, sweep) : (upper_text, lower_text)
+        (7, 4) : ("M", "35"),
+        (4, 18) : ("C", "F"),
+        (4, 19) : ("C", "F"),
+        (4, 20) : ("C", "F"),
+        (4, 21) : ("C", "F"),
+        (4, 22) : ("C", "F"),
+        (4, 23) : ("C", "F"),
+    }
+
+def draw_countdown(g, t) :
+    interval = countdown_zero - t
+    seconds = math.ceil(interval)
+    sweep = math.floor((seconds - interval) * nr_sweep_divisions)
+    g.set_source_colour(grey_3)
+    g.paint()
+    if sweep != 0 :
+        g.set_line_width(1)
+        g.new_path()
+        g.set_source_colour(black)
+        g.move_to(drawing_dims * Vector(0, -0.5))
+        g.line_to((0, 0))
+        arc = sweep / nr_sweep_divisions
+        g.line_to((drawing_dims * Vector(0, -1)).rotate(arc * qah.circle))
+        # ensure filled area goes to edges of frame
+        if arc > 0.875 :
+            g.line_to(drawing_dims * Vector(-1, -1))
+        #end if
+        if arc > 0.625 :
+            g.line_to(drawing_dims * Vector(-1, 1))
+        #end if
+        if arc > 0.375 :
+            g.line_to(drawing_dims * Vector(1, 1))
+        #end if
+        if arc > 0.125 :
+            g.line_to(drawing_dims * Vector(1, -1))
+        #end if
+        g.set_source_colour(grey_1)
+        g.fill_preserve()
+        g.set_source_colour(black)
+        g.stroke()
+        g.move_to(drawing_dims * Vector(-0.5, 0))
+        g.line_to(drawing_dims * Vector(0.5, 0))
+        g.move_to(drawing_dims * Vector(0, -0.5))
+        g.line_to(drawing_dims * Vector(0, 0.5))
+        g.stroke()
+    #end if
+    g.set_source_colour(black)
+    g.set_font_size(480)
+    extents = g.font_extents
+    s = "{}".format(seconds)
+    mid_y = (extents.ascent - extents.descent) / 2
+    g.move_to((- g.text_extents(s).x_advance / 2, mid_y))
+    g.show_text(s)
+    if sweep != 0 :
+        draw_circles_common(g)
+    #end if
+    overlay = countdown_overlays.get((seconds, sweep))
+    if overlay != None :
+        g.set_font_size(1.4 * small_font_size)
+        for pos, text, right in \
+            (
+                (Vector(-450, -225), overlay[0], False),
+                (Vector(450, -225), overlay[0], True),
+                (Vector(-450, 325), overlay[1], False),
+                (Vector(450, 325), overlay[1], True),
+            ) \
+        :
+            g.move_to(pos)
+            if right :
+                right_align_text(g, text)
+            else :
+                g.show_text(text)
+            #end if
+        #end for
+    #end if
+#end draw_countdown
+
+anim = \
+    sequential \
+        (
+            items =
+                (
+                    (2, compose(flip_vert, draw_splice_here)),
+                    (2, draw_black),
+                    (1, draw_subject),
+                    (2, draw_length_roll),
+                    (1, draw_reel_color_picture),
+                    (4, draw_black),
+                    (1, draw_ratio_sound),
+                    (1, draw_aspect_type_of),
+                    (1, draw_head),
+                    (2, draw_head), # TODO: blotch
+                    (1, draw_picture_label),
+                    (2, draw_smpte),
+                    (2, draw_xxxx),
+                    (2, draw_smpte),
+                    (1, draw_black),
+                    (2, draw_reel_prod_play),
+                    (6, draw_black),
+                    (1, draw_pic_company_series),
+                    (2, draw_black),
+                    (18, setup_grey),
+                    (1, draw_sound_start_16),
+                    (7, setup_grey),
+                    (1, draw_sound_start_35),
+                    (9, setup_grey),
+                    (15, draw_black),
+                    (2, draw_picture_start),
+                    (179, draw_countdown),
+                    (49, draw_black),
+                    (1, draw_black), # actually there is a small circle here
+                    (9, draw_black),
+                    (1,
+                        compose
+                          (
+                            flip_horiz,
+                            setup
+                              (
+                                ("translate", ((100, 0),)),
+                              ),
+                            draw_splice_here,
+                          )
+                    ),
+                ), # items
+            before = None,
+            after = None,
+            duration = anim_duration,
+            offset = 0
+        )
+
+def anim_init(g) :
+    g.set_operator(CAIRO.OPERATOR_SOURCE)
+    g.translate(drawing_dims / 2)
+    g.select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_NORMAL)
+#end anim_init
+
+start = time.time()
+frame_range = render_anim \
+  (
+    dimensions = drawing_dims,
+    start_time = 0,
+    end_time = anim_duration,
+    frame_rate = frame_rate,
+    draw_frame = anim,
+    overall_presetup = anim_init,
+    out_dir = os.path.join(os.path.dirname(sys.argv[0]), "frames"),
+    start_frame_nr = 1
+  )
+sys.stdout.write("%d frames in %.3fs\n" % (frame_range[1], time.time() - start))
