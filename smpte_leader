@@ -216,6 +216,44 @@ def draw_head(g, t) :
     centre_text(g, (325, 650), 225, "HEAD")
 #end draw_head
 
+def draw_blotch(g, t) :
+    setup_positive(g, t)
+    # main part looks roughly like a circle of radius 100 centred at (0, 0)
+    curve_half = \
+        (
+            Pt((80, 10), True),
+            Pt((60, 100), True),
+            Pt((-30, 50), False),
+            Pt((-60, 50), True),
+            Pt((-80, 40), True),
+            Pt((-110, 30), False),
+            Pt((-130, 20), True),
+            Pt((-140, 10), True),
+        )
+    blotch = Path \
+      ((
+        Path.Segment
+          (
+            points =
+                    (Pt(Vector(90, 0), False),)
+                +
+                    curve_half
+                +
+                    (Pt(Vector(-150, 0), False),)
+                +
+                    tuple
+                      (
+                        Pt(p.pt * Vector(1, -1), p.off)
+                        for p in reversed(curve_half)
+                      ),
+            closed = True
+          ),
+      ))
+    g.new_path()
+    g.append_path(blotch)
+    g.fill()
+#end draw_blotch
+
 def draw_picture_label(g, t) :
     setup_positive(g, t)
     centre_text(g, (200, 650), 225, "PICTURE")
@@ -442,7 +480,7 @@ anim = \
                     (1, draw_ratio_sound),
                     (1, draw_aspect_type_of),
                     (1, draw_head),
-                    (2, draw_head), # TODO: blotch
+                    (2, draw_blotch),
                     (1, draw_picture_label),
                     (2, draw_smpte),
                     (2, draw_xxxx),
