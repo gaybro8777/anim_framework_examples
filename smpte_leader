@@ -10,6 +10,8 @@
 # what you will.
 #-
 
+from numbers import \
+    Real
 import sys
 import os
 import math
@@ -46,7 +48,12 @@ grey_3 = Colour.grey(183 / 255)
 small_font_size = 120
 
 def centre_text(g, text_size, y_pos, text) :
-    g.set_font_size(text_size)
+    if isinstance(text_size, Real) :
+        g.set_font_size(text_size)
+    else :
+        # assume (compatible with) Vector
+        g.set_font_matrix(Matrix.scale(text_size))
+    #end if
     text_width = g.text_extents(text).advance.x
     g.move_to((- text_width / 2, y_pos))
     g.show_text(text)
@@ -206,12 +213,12 @@ def draw_aspect_type_of(g, t) :
 
 def draw_head(g, t) :
     setup_positive(g, t)
-    centre_text(g, 300, 0, "HEAD") # TODO: fill frame
+    centre_text(g, (325, 650), 225, "HEAD")
 #end draw_head
 
 def draw_picture_label(g, t) :
     setup_positive(g, t)
-    centre_text(g, 150, 0, "PICTURE") # TODO: fill frame
+    centre_text(g, (200, 650), 225, "PICTURE")
 #end draw_picture_label
 
 def draw_smpte(g, t) :
