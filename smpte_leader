@@ -383,8 +383,8 @@ def draw_picture_start(g, t) :
     g.set_source_colour(grey_2)
     g.paint()
     g.set_source_colour(black)
-    centre_text(g, 1.6 * small_font_size, -100, "PICTURE")
-    centre_text(g, 2.2 * small_font_size, 200, "START")
+    centre_text(g, 1.6 * small_font_size, -125, "PICTURE")
+    centre_text(g, (260, 400), 250, "START")
 #end draw_picture_start
 
 countdown_overlays = \
