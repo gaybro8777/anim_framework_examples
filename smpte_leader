@@ -46,7 +46,7 @@ white = Colour.grey(1)
 grey_1 = Colour.grey(104 / 255)
 grey_2 = Colour.grey(121 / 255)
 grey_3 = Colour.grey(183 / 255)
-small_font_size = 120
+small_font_size = Vector(120, 150)
 sans_serif_font = FontFace.create_for_pattern("helvetica condensed:weight=bold")
 light_sans_serif_font = FontFace.create_for_pattern("helvetica condensed")
 serif_font = FontFace.create_for_pattern("bookman:weight=bold")
@@ -161,7 +161,7 @@ def draw_subject(g, t) :
 def draw_length_roll(g, t) :
     flip_vert(g, t)
     setup_inverse(g, t)
-    g.set_font_size(small_font_size)
+    g.set_font_matrix(Matrix.scale(small_font_size))
     g.move_to((-400, -250))
     g.show_text("LENGTH")
     g.move_to((-400, 25))
@@ -171,7 +171,7 @@ def draw_length_roll(g, t) :
 def draw_reel_color_picture(g, t) :
     flip_vert(g, t)
     setup_inverse(g, t)
-    g.set_font_size(small_font_size)
+    g.set_font_matrix(Matrix.scale(Vector(0.9, 0.6) * small_font_size))
     g.move_to((-400, -250))
     g.show_text("REEL N")
     pos1 = g.current_point
@@ -185,7 +185,7 @@ def draw_reel_color_picture(g, t) :
     g.rel_line_to((line_len, 0))
     g.set_line_width(6)
     g.stroke()
-    g.move_to((-400, 25))
+    g.move_to((-400, 0))
     g.show_text("COLOR")
     g.move_to((-400, 325))
     g.set_font_face(serif_font)
@@ -197,7 +197,7 @@ def draw_ratio_sound(g, t) :
     flip_vert(g, t)
     setup_inverse(g, t)
     rotate_cw(g, t)
-    g.set_font_size(small_font_size)
+    g.set_font_matrix(Matrix.scale(small_font_size))
     g.move_to((-300, 100))
     g.show_text("RATIO")
     g.move_to((-300, 400))
@@ -208,7 +208,7 @@ def draw_aspect_type_of(g, t) :
     flip_vert(g, t)
     setup_inverse(g, t)
     rotate_cw(g, t)
-    g.set_font_size(small_font_size)
+    g.set_font_matrix(Matrix.scale(small_font_size))
     # g.show_text("\u25ef" * 4) # no longer works with different font
     g.set_line_width(20)
     for i in range(4) :
@@ -275,20 +275,21 @@ def draw_blotch(g, t) :
 
 def draw_picture_label(g, t) :
     setup_positive(g, t)
-    centre_text(g, sans_serif_font, (200, 650), 225, "PICTURE")
+    centre_text(g, sans_serif_font, (220, 700), 225, "PICTURE")
 #end draw_picture_label
 
 def draw_smpte(g, t) :
     # actually the two frames are very slightly different.
     setup_inverse(g, t)
-    centre_text(g, serif_font, 1.5 * small_font_size, -150, "SMPTE")
-    centre_text(g, serif_font, (small_font_size, 1.7 * small_font_size), 25, "UNIVERSAL")
-    centre_text(g, serif_font, 1.5 * small_font_size, 200, "LEADER")
+    centre_text(g, serif_font, 1.6 * small_font_size, -140, "SMPTE")
+    centre_text(g, serif_font, Vector(1.1, 1.4) * small_font_size, 60, "UNIVERSAL")
+    centre_text(g, serif_font, Vector(1.4, 1.4) * small_font_size, 260, "LEADER")
 #end draw_smpte
 
 def draw_xxxx(g, t) :
     setup_inverse(g, t)
-    g.set_font_size(small_font_size * 1.5)
+    g.set_font_face(light_sans_serif_font)
+    g.set_font_matrix(Matrix.scale(small_font_size * Vector(2.2, 1.3)))
     g.move_to((-440, -170))
     for i in range(4) :
         pos = g.current_point
@@ -301,7 +302,7 @@ def draw_reel_prod_play(g, t) :
     flip_vert(g, t)
     setup_inverse(g, t)
     rotate_cw(g, t)
-    g.set_font_size(0.8 * small_font_size)
+    g.set_font_matrix(Matrix.scale(0.8 * small_font_size))
     g.move_to((-300, -350))
     g.show_text("REEL NO.")
     g.move_to((-300, 50))
@@ -314,7 +315,7 @@ def draw_pic_company_series(g, t) :
     flip_vert(g, t)
     setup_inverse(g, t)
     rotate_cw(g, t)
-    g.set_font_size(0.8 * small_font_size)
+    g.set_font_matrix(Matrix.scale(0.8 * small_font_size))
     g.move_to((-300, -350))
     g.show_text("PICTURE")
     g.move_to((-300, 50))
@@ -468,11 +469,11 @@ def draw_countdown(g, t) :
     overlay = countdown_overlays.get((seconds, sweep))
     if overlay != None :
         g.set_font_face(sans_serif_font)
-        g.set_font_size(1.4 * small_font_size)
+        g.set_font_matrix(Matrix.scale(1.4 * small_font_size))
         for pos, text, right in \
             (
-                (Vector(-450, -225), overlay[0], False),
-                (Vector(450, -225), overlay[0], True),
+                (Vector(-450, -200), overlay[0], False),
+                (Vector(450, -200), overlay[0], True),
                 (Vector(-450, 325), overlay[1], False),
                 (Vector(450, 325), overlay[1], True),
             ) \
