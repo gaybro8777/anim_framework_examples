@@ -20,6 +20,7 @@ import qahirah as qah
 from qahirah import \
     CAIRO, \
     Colour, \
+    FontFace, \
     Matrix, \
     Path, \
     Vector
@@ -46,8 +47,12 @@ grey_1 = Colour.grey(104 / 255)
 grey_2 = Colour.grey(121 / 255)
 grey_3 = Colour.grey(183 / 255)
 small_font_size = 120
+sans_serif_font = FontFace.create_for_pattern("helvetica condensed:weight=bold")
+light_sans_serif_font = FontFace.create_for_pattern("helvetica condensed")
+serif_font = FontFace.create_for_pattern("bookman:weight=bold")
 
-def centre_text(g, text_size, y_pos, text) :
+def centre_text(g, font, text_size, y_pos, text) :
+    g.set_font_face(font)
     if isinstance(text_size, Real) :
         g.set_font_size(text_size)
     else :
@@ -150,7 +155,7 @@ def draw_splice_here(g, t) :
 def draw_subject(g, t) :
     flip_vert(g, t)
     setup_inverse(g, t)
-    centre_text(g, small_font_size, -250, "SUBJECT")
+    centre_text(g, sans_serif_font, small_font_size, -250, "SUBJECT")
 #end draw_subject
 
 def draw_length_roll(g, t) :
@@ -183,7 +188,8 @@ def draw_reel_color_picture(g, t) :
     g.move_to((-400, 25))
     g.show_text("COLOR")
     g.move_to((-400, 325))
-    g.set_font_size(1.7 * small_font_size)
+    g.set_font_face(serif_font)
+    g.set_font_matrix(Matrix.scale(Vector(1.5, 1.7) * small_font_size))
     g.show_text("PICTURE")
 #end draw_reel_color_picture
 
@@ -203,8 +209,21 @@ def draw_aspect_type_of(g, t) :
     setup_inverse(g, t)
     rotate_cw(g, t)
     g.set_font_size(small_font_size)
-    g.move_to((-300, -350))
-    g.show_text("\u25ef" * 4)
+    # g.show_text("\u25ef" * 4) # no longer works with different font
+    g.set_line_width(20)
+    for i in range(4) :
+        g.new_path()
+        g.arc \
+          (
+            centre = Vector(-230, -360) + Vector(160, 0) * i,
+            radius = 65,
+            angle1 = 0,
+            angle2 = qah.circle,
+            negative = False
+          )
+        g.close_path()
+        g.stroke()
+    #end for
     g.move_to((-300, 50))
     g.show_text("ASPECT")
     g.move_to((-300, 400))
@@ -213,7 +232,7 @@ def draw_aspect_type_of(g, t) :
 
 def draw_head(g, t) :
     setup_positive(g, t)
-    centre_text(g, (325, 650), 225, "HEAD")
+    centre_text(g, sans_serif_font, (325, 650), 225, "HEAD")
 #end draw_head
 
 def draw_blotch(g, t) :
@@ -256,15 +275,15 @@ def draw_blotch(g, t) :
 
 def draw_picture_label(g, t) :
     setup_positive(g, t)
-    centre_text(g, (200, 650), 225, "PICTURE")
+    centre_text(g, sans_serif_font, (200, 650), 225, "PICTURE")
 #end draw_picture_label
 
 def draw_smpte(g, t) :
     # actually the two frames are very slightly different.
     setup_inverse(g, t)
-    centre_text(g, 1.5 * small_font_size, -150, "SMPTE")
-    centre_text(g, small_font_size, 0, "UNIVERSAL")
-    centre_text(g, 1.5 * small_font_size, 200, "LEADER")
+    centre_text(g, serif_font, 1.5 * small_font_size, -150, "SMPTE")
+    centre_text(g, serif_font, (small_font_size, 1.7 * small_font_size), 25, "UNIVERSAL")
+    centre_text(g, serif_font, 1.5 * small_font_size, 200, "LEADER")
 #end draw_smpte
 
 def draw_xxxx(g, t) :
@@ -335,9 +354,9 @@ def draw_sound_start_common(g, size_text) :
     g.move_to((0, -500))
     g.line_to((0, -300))
     g.stroke()
-    centre_text(g, 1.5 * small_font_size, -50, size_text)
-    centre_text(g, 0.8 * small_font_size, 75, "SOUND")
-    centre_text(g, 0.8 * small_font_size, 190, "START")
+    centre_text(g, sans_serif_font, 1.5 * small_font_size, -50, size_text)
+    centre_text(g, sans_serif_font, 0.8 * small_font_size, 75, "SOUND")
+    centre_text(g, sans_serif_font, 0.8 * small_font_size, 190, "START")
 #end draw_sound_start_common
 
 def draw_sound_start_16(g, t) :
@@ -383,8 +402,8 @@ def draw_picture_start(g, t) :
     g.set_source_colour(grey_2)
     g.paint()
     g.set_source_colour(black)
-    centre_text(g, 1.6 * small_font_size, -125, "PICTURE")
-    centre_text(g, (260, 400), 250, "START")
+    centre_text(g, sans_serif_font, 1.6 * small_font_size, -125, "PICTURE")
+    centre_text(g, sans_serif_font, (260, 400), 250, "START")
 #end draw_picture_start
 
 countdown_overlays = \
@@ -404,6 +423,7 @@ def draw_countdown(g, t) :
     sweep = math.floor((seconds - interval) * nr_sweep_divisions)
     g.set_source_colour(grey_3)
     g.paint()
+    g.set_font_face(light_sans_serif_font)
     if sweep != 0 :
         g.set_line_width(1)
         g.new_path()
@@ -447,6 +467,7 @@ def draw_countdown(g, t) :
     #end if
     overlay = countdown_overlays.get((seconds, sweep))
     if overlay != None :
+        g.set_font_face(sans_serif_font)
         g.set_font_size(1.4 * small_font_size)
         for pos, text, right in \
             (
@@ -525,7 +546,7 @@ anim = \
 def anim_init(g) :
     g.set_operator(CAIRO.OPERATOR_SOURCE)
     g.translate(drawing_dims / 2)
-    g.select_font_face("sans-serif", CAIRO.FONT_SLANT_NORMAL, CAIRO.FONT_WEIGHT_NORMAL)
+    g.set_font_face(sans_serif_font)
 #end anim_init
 
 start = time.time()
