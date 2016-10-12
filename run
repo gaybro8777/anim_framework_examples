@@ -10,7 +10,7 @@
 # This script needs the ffplay command, which is part of FFmpeg
 # <https://www.ffmpeg.org/>.
 #
-# Copyright 2015 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# Copyright 2015-2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
 # <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
 # what you will.
@@ -21,4 +21,6 @@ parent_dir="${0%\/*}"
 mkdir -p frames
 find frames -maxdepth 1 -type f -name '????.png' | xargs -r rm
 $PYTHON "${parent_dir}/${1}"
-exec ffplay -autoexit frames/%04d.png
+if test "$NOPLAY" = ""; then
+    exec ffplay -autoexit frames/%04d.png
+fi
