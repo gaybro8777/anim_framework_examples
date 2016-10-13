@@ -1,0 +1,39 @@
+#!/bin/bash
+#+
+# This script generates the smpte_leader animation, and combines
+# it with an audio track containing the “2-pop”.
+#
+# Additional package needed: ffmpeg.
+#
+# Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
+# script is licensed CC0
+# <https://creativecommons.org/publicdomain/zero/1.0/>; do with it
+# what you will.
+#-
+
+out_ext=.ogv
+video_codec=theora
+audio_codec=libvorbis
+audio_sample_rate=44100
+audio_sample_size=2
+video_frame_rate=24 # note this is hard-coded into the Python script
+video_bit_rate=5M
+pop_duration=$(printf %.03f $(bc <<<"scale = 3; 1 / $video_frame_rate"))
+  # needs a leading zero, which bc alone doesn’t provide
+
+set -e
+parent_dir="${0%\/*}"
+if test "$NO_GENERATE_FRAMES" = ""; then
+    mkdir -p frames
+    find frames -maxdepth 1 -type f -name '????.png' | xargs -r rm
+    $PYTHON "${parent_dir}"/smpte_leader
+fi
+ffmpeg \
+    -r:v $video_frame_rate -i frames/%04d.png \
+    -r:a $audio_sample_rate -acodec pcm_s16le -f s16le \
+        -i <(
+            dd if=/dev/zero bs=$(($audio_sample_rate * $audio_sample_size * 9)) count=1;
+            ffmpeg -filter_complex "sine=f=1000:d=${pop_duration}[out]" -map '[out]' -r:a $audio_sample_rate -acodec pcm_s16le -f s16le -y /dev/stdout;
+            dd if=/dev/zero bs=$(($audio_sample_rate * $(($video_frame_rate * 2 - 1)) / $video_frame_rate * $audio_sample_size)) count=1
+        ) \
+    -acodec $audio_codec -vcodec $video_codec -b:v $video_bit_rate smpte_leader${out_ext}
