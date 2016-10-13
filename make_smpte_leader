@@ -3,7 +3,7 @@
 # This script generates the smpte_leader animation, and combines
 # it with an audio track containing the “2-pop”.
 #
-# Additional package needed: ffmpeg.
+# Additional packages needed: ffmpeg, bc.
 #
 # Copyright 2016 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>. This
 # script is licensed CC0
