@@ -1,9 +1,10 @@
-Here are some examples of my [anim_framework](https://github.com/ldo/anim_framework)
-Python library in action. They all work by generating the frames as sequentially-numbered
-PNG files into a subdirectory called “frames”. Use the “run” wrapper script to run
-them; this will take care of (re)creating this subdirectory, and ensuring it does
-not contain any leftover output from a previous script run. It will also play back
-the result, using ffplay. For example:
+Here are some examples of my anim_framework
+([GitLab](https://gitlab.com/ldo/anim_framework),
+[GitHub](https://github.com/ldo/anim_framework)) Python library in action. They all work
+by generating the frames as sequentially-numbered PNG files into a subdirectory called
+“frames”. Use the “run” wrapper script to run them; this will take care of (re)creating
+this subdirectory, and ensuring it does not contain any leftover output from a previous
+script run. It will also play back the result, using ffplay. For example:
 
    ./run readme_example
 
@@ -13,4 +14,4 @@ afterwards.
 Note that the demos can take up to a minute or two to generate the frames.
 
 Lawrence D'Oliveiro <ldo@geek-central.gen.nz>
-2015 April 16
+2017 April 7
