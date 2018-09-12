@@ -47,9 +47,9 @@ grey_1 = Colour.grey(104 / 255)
 grey_2 = Colour.grey(121 / 255)
 grey_3 = Colour.grey(183 / 255)
 small_font_size = Vector(120, 150)
-sans_serif_font = FontFace.create_for_pattern("helvetica condensed:weight=bold")
+sans_serif_font = FontFace.create_for_pattern("helvetica condensed:weight=200")
 light_sans_serif_font = FontFace.create_for_pattern("helvetica condensed")
-serif_font = FontFace.create_for_pattern("bookman:weight=bold")
+serif_font = FontFace.create_for_pattern("bookman:weight=200")
 
 def centre_text(g, font, text_size, y_pos, text) :
     g.set_font_face(font)
